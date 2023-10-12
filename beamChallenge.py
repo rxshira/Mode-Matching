@@ -4,13 +4,14 @@ import functools
 from physunits import *
 pi = np.pi
 
-NPRO_wavelength = 1064*nm
+NPRO_wavelength_RED= 1064.50*nm
+NPRO_wavelength_GREEN= 532.25*nm
 
 
 def beam_param_at_z(z, z0, w0):
     z = z - z0
     # This is the Rayleigh length
-    zR = pi * w0**2 / NPRO_wavelength
+    zR = pi * w0**2 / NPRO_wavelength_RED
     # Waist as a function of propagation w(z)
     # Get the beam parameter at a given z position
     qz = z - 1j*zR
@@ -35,6 +36,10 @@ def beam_q_param(qin, abcd_matrix):
     C = abcd_matrix.item(1, 0)
     D = abcd_matrix.item(1, 1)
     return (A + (B / qin)) / (C + (D / qin))
+
+def refraction_flat_mirror():
+    return np.matrix([[1, 0], [0, 1]])
+
 
 
 def combine_beam_path_components(abcd_arr):
@@ -76,6 +81,11 @@ ax.set_title('Beam waist plot after optical path')
 ax.set_xlabel('z position (m)')
 ax.set_ylabel('Beam Radius (mm)')
 plt.show()
+
+# LIGO Laser Beam Path #
+
+
+
 
 
 # Thought-provoking ideas: Challenge
