@@ -1,10 +1,9 @@
 import math
-
 import numpy as np
 import matplotlib.pyplot as plt
 from physunits import *
 pi = np.pi
-
+from functools import reduce
 
 class BeamPathElement:
     def __init__(self, x, y, label, w0=0, z0=0, wavelength=None):
@@ -36,10 +35,10 @@ class BeamPathElement:
     def waist_at_z(self, z):
         q = self.q0 - z
         wz = self.w0 * np.sqrt(1 + (q.real / q.imag) ** 2)
-        return np.array(wz), self.outout_wavelength()
+        return np.array(wz), self.output_wavelength()
 
 
-    def outout_wavelength(self):
+    def output_wavelength(self):
         return self.wavelength
 
 
@@ -67,13 +66,21 @@ class OpticalDevice(BeamPathElement):
         w0 = np.sqrt(self.wavelength * q_new_beam_segment.imag / np.pi)
         self.set_element_properties(w0, z0)
 
+class SHG(OpticalDevice):
+    def __init__(self, abcd_matrix, x, y, label):
+        super().__init__(abcd_matrix, x, y, label)
+
+    def output_wavelength(self):
+        return self.wavelength/2.0
+
+
 # IMPORTANT - everything is in cm
 
 NPRO_wavelength = 1064.50*nm
 NPRO_wavelength_green = NPRO_wavelength/2
 
 def thin_lens_abcd_matrix(f):
-    return np.matrix([[1.0, 0.0], [1.0/-f, 1.0]])
+    return np.matrix([[1.0, 0.0], [1.0/-f, 1.0]]) # change "-f" -> "f" ?
 
 
 def refraction_curved_abcd_matrix(R, n1, n2):
@@ -82,6 +89,15 @@ def refraction_curved_abcd_matrix(R, n1, n2):
 def mirror():
     return np.matrix([[1,0], [0,1]])
 
+def shg_abcd_matrix(n1, n2, n3, d1, d2): # single harmonic generator
+    input_refraction = np.matrix([[1,0], [0, n1/n2]])
+    propagation1 = np.matrix([[1, d1], [0, 1]])
+    inside_refraction = np.matrix([[1, 0], [0, n2/n3]])
+    propagation2 = np.matrix([[1, d2], [0, 1]])
+    output_refraction = np.matrix([[1, 0], [0, n3 / n1]])
+    reverse_path = [output_refraction, propagation2, inside_refraction, propagation1, input_refraction]
+    return reduce(np.matmul, reverse_path)
+
 # plot of the beam waist as a function of z_arr
 def shade_gaussian(axis, z, waist_profile, color):
     axis.plot(z, waist_profile, c=color)
@@ -89,28 +105,42 @@ def shade_gaussian(axis, z, waist_profile, color):
     axis.fill_between(z, waist_profile/um, -waist_profile/um, color=color, alpha=0.2)
 
 
+# BEAM PATH:
 devices = [BeamPathElement(16 * inch, 3 * inch, "Start", w0=217*um, z0=5*cm, wavelength=NPRO_wavelength),
-           # lamda/2 (26, 3)
-           OpticalDevice(mirror(), 28.5 * inch, 3 * inch, "M1"),
-           OpticalDevice(thin_lens_abcd_matrix(75 * mm), 28.5 * inch, 8 * inch, "L1"),
-           OpticalDevice(mirror(), 28.5 * inch, 9 * inch, "M2"),
+           # half-wave plate (26, 3)
+           OpticalDevice(mirror(), 28.5 * inch, 3 * inch, "\nM1"),
+           OpticalDevice(thin_lens_abcd_matrix(75 * mm), 28.5 * inch, 8 * inch, "\nL1"),
+           OpticalDevice(mirror(), 28.5 * inch, 9 * inch, "\nM2"),
            # faraday isolator (25.5, 9)
-           # lamda/2 (21, 9)
-           OpticalDevice(thin_lens_abcd_matrix(250 * mm), 17 * inch, 9 * inch, "L2"),
-           OpticalDevice(thin_lens_abcd_matrix(250 * mm), 9 * inch, 8 * inch, "L3"),
+           # half-wave plate (21, 9)
+           OpticalDevice(thin_lens_abcd_matrix(250 * mm), 17 * inch, 9 * inch, "\nL2"),
+           OpticalDevice(thin_lens_abcd_matrix(250 * mm), 9 * inch, 8 * inch, "\nL3"),
              # question: why are the lenses dispersing the light? if you change the matrix from "-f" to "f" its fine
-           OpticalDevice(mirror(), 4.5 * inch, 9 * inch, "M3"),
-           OpticalDevice(mirror(), 4.5 * inch, 12 * inch, "M4"),
-           
-
-
-
-
-
-
-           # OpticalDevice(thin_lens_abcd_matrix(-20*cm), 37*cm, 5*cm, "L2"),
-           # OpticalDevice(thin_lens_abcd_matrix(-40*cm), 67*cm, 0, "L3"),
-           BeamPathElement(117 * cm, 0, "End")]
+           OpticalDevice(mirror(), 4.5 * inch, 9 * inch, "\nM3"),
+           OpticalDevice(mirror(), 4.5 * inch, 12 * inch, "\nM4"),
+           SHG(shg_abcd_matrix(1, 1.7379, 1.7779, 1.5*cm, 1.5*cm), 11*inch, 12*inch, "\nSHG"), # took crystal as
+            # having one refraction index which is of the 1064nm
+           # DSP (14.5, 12) in 1064nm
+           OpticalDevice(thin_lens_abcd_matrix(250 * mm), 17.2 * inch, 12.4 * inch, "\nL4"),
+           # half-wave plate (21, 12.5)
+           OpticalDevice(mirror(), 25.5 * inch, 12.9 * inch, "\nM5"),
+           OpticalDevice(thin_lens_abcd_matrix(200 * mm), 25.5 * inch, 15 * inch, "\nL5"),
+           # faraday isolator (26, 24)
+           OpticalDevice(thin_lens_abcd_matrix(125 * mm), 26 * inch, 29 * inch, "\nL6"),
+           # half-wave plate (26, 39)
+           OpticalDevice(mirror(), 26 * inch, 41 * inch, "\nM6"),
+           OpticalDevice(mirror(), 21 * inch, 41 * inch, "\nM7"),
+           OpticalDevice(mirror(), 21 * inch, 35 * inch, "\nM8"),
+           OpticalDevice(thin_lens_abcd_matrix(-125 * mm), 28.5 * inch, 34 * inch, "\nL6"),
+           OpticalDevice(mirror(), 30.5 * inch, 34 * inch, "\nM9"),
+           # open shutter (30, 29)
+           # open shutter? (30, 25)
+           OpticalDevice(mirror(), 30 * inch, 21.5 * inch, "\nM10"),
+           # half-wave plate, open? (18, 21.5)
+           # DSP (14.5, 21.75)
+           OpticalDevice(thin_lens_abcd_matrix(1000 * mm), 11 * inch, 21.75 * inch, "\nL7"),
+           # half-wave plate, open? (6, 21.5)
+           BeamPathElement(117 * cm, 0, "\nETMY")]
 
 propagation_segments_z = []
 
