@@ -79,12 +79,8 @@ def thin_lens_abcd_matrix(f):
 def refraction_curved_abcd_matrix(R, n1, n2):
     return np.matrix([[1, 0], [(n1-n2)/(R*n2), n1/n2]])
 
-def ref_prog_ref_abcd_matrix(n1, n2, d):
-    in_ref = np.matrix([[1,0], [0, n1/n2]])
-    prop = np.matrix([[1, d], [0, 1]])
-    out_ref = np.matrix([[1, 0], [0, n2/n1]])
-    return np.matmul(np.matmul(out_ref, prop), in_ref)
-
+def mirror():
+    return np.matrix([[1,0], [0,1]])
 
 # plot of the beam waist as a function of z_arr
 def shade_gaussian(axis, z, waist_profile, color):
@@ -93,10 +89,27 @@ def shade_gaussian(axis, z, waist_profile, color):
     axis.fill_between(z, waist_profile/um, -waist_profile/um, color=color, alpha=0.2)
 
 
-devices = [BeamPathElement(0, 0, "Start", w0=217*um, z0=5*cm, wavelength=NPRO_wavelength),
-           OpticalDevice(thin_lens_abcd_matrix(-10*cm), 7*cm, 0, "L1"),
-           OpticalDevice(thin_lens_abcd_matrix(-20*cm), 37*cm, 5*cm, "L2"),
-           OpticalDevice(thin_lens_abcd_matrix(-40*cm), 67*cm, 0, "L3"),
+devices = [BeamPathElement(16 * inch, 3 * inch, "Start", w0=217*um, z0=5*cm, wavelength=NPRO_wavelength),
+           # lamda/2 (26, 3)
+           OpticalDevice(mirror(), 28.5 * inch, 3 * inch, "M1"),
+           OpticalDevice(thin_lens_abcd_matrix(75 * mm), 28.5 * inch, 8 * inch, "L1"),
+           OpticalDevice(mirror(), 28.5 * inch, 9 * inch, "M2"),
+           # faraday isolator (25.5, 9)
+           # lamda/2 (21, 9)
+           OpticalDevice(thin_lens_abcd_matrix(250 * mm), 17 * inch, 9 * inch, "L2"),
+           OpticalDevice(thin_lens_abcd_matrix(250 * mm), 9 * inch, 8 * inch, "L3"),
+             # question: why are the lenses dispersing the light? if you change the matrix from "-f" to "f" its fine
+           OpticalDevice(mirror(), 4.5 * inch, 9 * inch, "M3"),
+           OpticalDevice(mirror(), 4.5 * inch, 12 * inch, "M4"),
+           
+
+
+
+
+
+
+           # OpticalDevice(thin_lens_abcd_matrix(-20*cm), 37*cm, 5*cm, "L2"),
+           # OpticalDevice(thin_lens_abcd_matrix(-40*cm), 67*cm, 0, "L3"),
            BeamPathElement(117 * cm, 0, "End")]
 
 propagation_segments_z = []
