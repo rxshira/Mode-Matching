@@ -80,7 +80,7 @@ NPRO_wavelength = 1064.50*nm
 NPRO_wavelength_green = NPRO_wavelength/2
 
 def thin_lens_abcd_matrix(f):
-    return np.matrix([[1.0, 0.0], [1.0/-f, 1.0]]) # change "-f" -> "f" ?
+    return np.matrix([[1.0, 0.0], [1.0/f, 1.0]]) # changed "-f" -> "f"
 
 
 def refraction_curved_abcd_matrix(R, n1, n2):
