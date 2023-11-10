@@ -38,11 +38,14 @@ class BeamPathElement:
         wz = self.w0 * np.sqrt(1 + (q.real / q.imag) ** 2)
         return np.array(wz), self.outout_wavelength()
 
+
     def outout_wavelength(self):
         return self.wavelength
 
+
     def __str__(self):
         return self.label
+
 
 class OpticalDevice(BeamPathElement):
     def __init__(self, abcd_matrix, x, y, label):
@@ -72,6 +75,7 @@ NPRO_wavelength_green = NPRO_wavelength/2
 def thin_lens_abcd_matrix(f):
     return np.matrix([[1.0, 0.0], [1.0/-f, 1.0]])
 
+
 def refraction_curved_abcd_matrix(R, n1, n2):
     return np.matrix([[1, 0], [(n1-n2)/(R*n2), n1/n2]])
 
@@ -81,11 +85,13 @@ def ref_prog_ref_abcd_matrix(n1, n2, d):
     out_ref = np.matrix([[1, 0], [0, n2/n1]])
     return np.matmul(np.matmul(out_ref, prop), in_ref)
 
+
 # plot of the beam waist as a function of z_arr
 def shade_gaussian(axis, z, waist_profile, color):
     axis.plot(z, waist_profile, c=color)
     axis.plot(z, -waist_profile, c=color)
     axis.fill_between(z, waist_profile/um, -waist_profile/um, color=color, alpha=0.2)
+
 
 devices = [BeamPathElement(0, 0, "Start", w0=217*um, z0=5*cm, wavelength=NPRO_wavelength),
            OpticalDevice(thin_lens_abcd_matrix(-10*cm), 7*cm, 0, "L1"),
@@ -103,6 +109,7 @@ for index, device in enumerate(devices[:-1]):
     segment_range = np.arange(start=distance_so_far, stop=next_device_z, step=1*mm)
     distance_so_far = next_device_z
     propagation_segments_z.append(segment_range)
+
 
 beam_waist = np.array([])
 all_z = np.array([])
