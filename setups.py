@@ -1,6 +1,11 @@
 from main import *
 NPRO_wavelength = 1064.50*nm
 
+y = ABCD_Matrix_of.fabry_perot_cavity(57*m, 38.79*m)
+fbc = FabryPerotCavity(37*m, 57*m, 1, 1, "FBC", "yellow")
+fbc.stable_waist(NPRO_wavelength/2)
+
+
 devices = [BeamPathElement(16 * inch, 3 * inch, "Start", w0=217*um, z0=5*cm, wavelength=NPRO_wavelength,
                            color="red"),
            # half-wave plate (26, 3)
@@ -35,6 +40,9 @@ devices = [BeamPathElement(16 * inch, 3 * inch, "Start", w0=217*um, z0=5*cm, wav
            ThinLens(1000 * mm, 11 * inch, 21.75 * inch, "\nL8", color="green"),
            # half-wave plate, open? (6, 21.5)
            BeamPathElement(117 * cm, 0, "\nETMY")]
+
+beam_path = LaserBeamSetup(devices)
+beam_path.plot_beam_path()
 
 beam_path = LaserBeamSetup(devices)
 beam_path.plot_beam_path()
