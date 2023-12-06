@@ -1,9 +1,10 @@
 import math
+from physunits import *
 import numpy as np
 import matplotlib.pyplot as plt
-from physunits import *
 from functools import reduce
 pi = np.pi
+
 
 class LaserBeamSetup:
     def __init__(self, devices):
@@ -46,8 +47,8 @@ class LaserBeamSetup:
         device_labels = [d.label for d in self.devices[1:-1]]
         heights = np.array([p.waist_values[-1] / um for p in self.propagation_segments[0:-1]])
         plt.vlines(x=devices_location, ymax=heights, ymin=-heights, colors='k')
-        for i, lbl in enumerate(device_labels):
-            plt.text(s=" " + lbl, x=devices_location[i], y=10, c="blue")
+        for device_loc, lbl in zip(devices_location, device_labels):
+            plt.text(s=" " + lbl, x=device_loc, y=10, c="blue")
         plt.show()
 
 
@@ -135,6 +136,16 @@ class FaradayIsolator(OpticalDevice):
         super().__init__(ABCD_Matrix_of.faraday_isolator(n1, n2, d), x, y, label, color)
 
 
+class FabryPerotCavity(OpticalDevice):
+    def __init__(self, rc, d, x, y,  label, color):
+        super().__init__(ABCD_Matrix_of.fabry_perot_cavity(rc, d), x, y, label, color)
+        self.d = d
+        self.rc = rc
+
+    def stable_waist(self, wave_length):
+        return (wave_length*self.rc/pi)**2 * (self.d/(self.rc + self.rc - self.d))
+
+
 class PropagationSegment:
     def __init__(self, z_values, waist_values, color):
         self.z_values = z_values
@@ -173,3 +184,10 @@ class ABCD_Matrix_of:
         reverse_path = [exiting_refraction, propagation, entering_refraction]
         return reduce(np.matmul, reverse_path)
 
+    @staticmethod
+    def fabry_perot_cavity(Rc, d):
+        curved_mirror_refraction = np.matrix(np.array([[1, 0], [-2/Rc, 1]]))
+        propagation = np.matrix(np.array([[1, d], [0, 1]]))
+        reverse_path = [curved_mirror_refraction, propagation, curved_mirror_refraction,
+                        propagation, curved_mirror_refraction]
+        return reduce(np.matmul, reverse_path)
