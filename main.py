@@ -143,7 +143,7 @@ class FabryPerotCavity(OpticalDevice):
         self.rc = rc
 
     def stable_waist(self, wave_length):
-        return (wave_length*self.rc/pi)**2 * (self.d/(self.rc + self.rc - self.d))
+        return ((wave_length/pi)**2  ((self.rc-self.d)**2)  (self.rc+self.rc - self.d)) / (2*(self.rc-self.d))**2
 
 
 class PropagationSegment:
