@@ -51,6 +51,10 @@ class LaserBeamSetup:
             plt.text(s=" " + lbl, x=device_loc, y=10, c="blue")
         plt.show()
 
+    def waist_at_end(self):
+        self.propagate()
+        return self.propagation_segments[-1].waist_values[-1]
+
 
 class BeamPathElement:
     def __init__(self, x, y, label, w0=0, z0=0, wavelength=None, color=""):
@@ -143,7 +147,7 @@ class FabryPerotCavity(OpticalDevice):
         self.rc = rc
 
     def stable_waist(self, wave_length):
-        return ((wave_length/pi)**2  ((self.rc-self.d)**2)  (self.rc+self.rc - self.d)) / (2*(self.rc-self.d))**2
+        return ((wave_length/pi)**2 * ((self.rc-self.d)**2) * (self.rc+self.rc - self.d)) / (2*(self.rc-self.d))**2
 
 
 class PropagationSegment:
