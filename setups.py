@@ -3,7 +3,7 @@ NPRO_wavelength = 1064.50*nm
 
 y = ABCD_Matrix_of.fabry_perot_cavity(57*m, 38.79*m)
 fbc = FabryPerotCavity(37*m, 57*m, 1, 1, "FBC", "yellow")
-fbc.stable_waist(NPRO_wavelength/2)
+
 
 
 devices = [BeamPathElement(16 * inch, 3 * inch, "Start", w0=217*um, z0=5*cm, wavelength=NPRO_wavelength,
@@ -42,8 +42,5 @@ devices = [BeamPathElement(16 * inch, 3 * inch, "Start", w0=217*um, z0=5*cm, wav
            BeamPathElement(117 * cm, 0, "\nETMY")]
 
 beam_path = LaserBeamSetup(devices)
+efficiency = beam_path.waist_at_end() / fbc.stable_waist(NPRO_wavelength/2)
 beam_path.plot_beam_path()
-
-beam_path = LaserBeamSetup(devices)
-beam_path.plot_beam_path()
-
