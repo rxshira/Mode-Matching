@@ -140,6 +140,11 @@ class FaradayIsolator(OpticalDevice):
         super().__init__(ABCD_Matrix_of.faraday_isolator(n1, n2, d), x, y, label, color)
 
 
+class CurvedMirror(OpticalDevice):
+    def __init__(self, Rc, x, y, label, color):
+        super().__init__(ABCD_Matrix_of.curved_mirror(Rc), x, y, label, color)
+
+
 class FabryPerotCavity(OpticalDevice):
     def __init__(self, rc, d, x, y,  label, color):
         super().__init__(ABCD_Matrix_of.fabry_perot_cavity(rc, d), x, y, label, color)
@@ -195,3 +200,7 @@ class ABCD_Matrix_of:
         reverse_path = [curved_mirror_refraction, propagation, curved_mirror_refraction,
                         propagation, curved_mirror_refraction]
         return reduce(np.matmul, reverse_path)
+
+    @staticmethod
+    def curved_mirror(Rc):
+        return np.matrix(np.array([[1, 0], [-2/Rc, 1]]))
